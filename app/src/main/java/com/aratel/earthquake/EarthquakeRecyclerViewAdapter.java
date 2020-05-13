@@ -8,6 +8,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.aratel.earthquake.databinding.ListItemEarthquakeBinding;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -33,8 +35,17 @@ public class EarthquakeRecyclerViewAdapter extends RecyclerView.Adapter<Earthqua
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_earthquake,parent,false);
-        return new ViewHolder(view);
+        /**
+         * use the line below when do not use data binding
+         */
+        /*View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_earthquake,parent,false);
+        return new ViewHolder(view);*/
+
+        /**
+         * use the line below when using data binding
+         */
+        ListItemEarthquakeBinding binding = ListItemEarthquakeBinding.inflate(LayoutInflater.from(parent.getContext()),parent,false);
+        return new ViewHolder(binding);
     }
 
     @Override
@@ -43,9 +54,21 @@ public class EarthquakeRecyclerViewAdapter extends RecyclerView.Adapter<Earthqua
         //holder.detailsView.setText(mEarthquake.get(position).toString());
 
         Earthquake earthquake = mEarthquake.get(position);
-        holder.date.setText(TIME_FORMAT.format(earthquake.getDate()));
-        holder.details.setText(earthquake.getDetails());
-        holder.magnitude.setText(MAGNITUDE_FORMAT.format(earthquake.getMagnitude()));
+
+        //holder.date.setText(TIME_FORMAT.format(earthquake.getDate()));
+        //holder.details.setText(earthquake.getDetails());
+        //holder.magnitude.setText(MAGNITUDE_FORMAT.format(earthquake.getMagnitude()));
+
+        /**
+         * use the line below when using data binding
+         */
+        holder.binding.setEarthquake(earthquake);
+        /**
+         * By default, any variables binding you apply is done after the next frame redraw.
+         * This can cause a visible flicker when used in scrollable views such as Recycler View
+         * o avoid this, call executePendingBindings after setting your variables, causing the binding to be done immediately
+         */
+        holder.binding.executePendingBindings();
 
     }
 
@@ -61,18 +84,33 @@ public class EarthquakeRecyclerViewAdapter extends RecyclerView.Adapter<Earthqua
         //public final TextView detailsView;
         //public Earthquake earthquake;
 
-        public final TextView date;
-        public final TextView details;
-        public final TextView magnitude;
+        //public final TextView date;
+        //public final TextView details;
+        //public final TextView magnitude;
 
+        /**
+         * using data binding
+         */
+        public final ListItemEarthquakeBinding binding;
 
-        public ViewHolder(@NonNull View view) {
-            super(view);
+        // @NonNull View view is remove in ViewHolder when using data binding
+        public ViewHolder(ListItemEarthquakeBinding binding) {
+            //super(view);
+            super(binding.getRoot());
+
             //parentView = view;
             //detailsView = view.findViewById(R.id.list_item_earthquake_details);
-            date = view.findViewById(R.id.date);
-            details = view.findViewById(R.id.details);
-            magnitude = view.findViewById(R.id.magnitude);
+
+            //date = view.findViewById(R.id.date);
+            //details = view.findViewById(R.id.details);
+            //magnitude = view.findViewById(R.id.magnitude);
+
+            /**
+             * use data binding
+             */
+            this.binding = binding;
+            binding.setTimeformat(TIME_FORMAT);
+            binding.setMagnitudeformat(MAGNITUDE_FORMAT);
         }
 
         /*@Override
