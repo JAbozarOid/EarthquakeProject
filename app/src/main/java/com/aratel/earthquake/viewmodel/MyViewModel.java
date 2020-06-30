@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 // this class is used for checking network connection
@@ -106,6 +107,9 @@ public class MyViewModel extends AndroidViewModel {
                 }
             }
         }
+        //convert String to ArrayList
+        List<String> myList = new ArrayList<String>(Arrays.<String>asList(response.toString()));
+        Log.d(TAG,"myList" + " " + myList);
         return response.toString();
     }
 
