@@ -1,6 +1,7 @@
 package com.aratel.earthquake;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -29,6 +31,8 @@ public class EarthquakeListFragment extends Fragment {
     protected EarthquakeViewModel earthquakeViewModel;
     private SwipeRefreshLayout mSwipeToRefreshView;
     private OnListFragmentInteractionListener mListener;
+
+    private int mMinimumMagnitude = 0;
 
     public EarthquakeListFragment() {
     }
@@ -54,7 +58,7 @@ public class EarthquakeListFragment extends Fragment {
         earthquakeViewModel = ViewModelProviders.of(getActivity()).get(EarthquakeViewModel.class);
 
         // Get the data from the View Model, and observe any changes.
-        earthquakeViewModel.getEarthquakes().observe(this, new Observer<List<Earthquake>>() {
+        earthquakeViewModel.getEarthquakes().observe(getViewLifecycleOwner(), new Observer<List<Earthquake>>() {
             @Override
             public void onChanged(List<Earthquake> earthquakes) {
                 // When the view model changes , update the list
@@ -63,7 +67,23 @@ public class EarthquakeListFragment extends Fragment {
                 }
             }
         });
+
+        // Register an OnSharedPreferenceChangeListener
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.registerOnSharedPreferenceChangeListener(mPrefListener);
     }
+
+    private SharedPreferences.OnSharedPreferenceChangeListener mPrefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            if (PreferencesActivity.PREF_MIN_MAG.equals(key)) {
+                List<Earthquake> earthquakes
+                        = earthquakeViewModel.getEarthquakes().getValue();
+                if (earthquakes != null)
+                    setEarthquakes(earthquakes);
+            }
+        }
+    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -116,14 +136,35 @@ public class EarthquakeListFragment extends Fragment {
     public void setEarthquakes(List<Earthquake> earthquakes) {
         mEarthquake.clear();
         mEarthquakeAdapter.notifyDataSetChanged();
+
+        updateFromPreferences();
+
         for (Earthquake earthquake : earthquakes
         ) {
-            // check for duplicates
-            if (!mEarthquake.contains(earthquake)) {
-                mEarthquake.add(earthquake);
-                mEarthquakeAdapter.notifyItemInserted(earthquakes.indexOf(earthquake));
+            if (earthquake.getMagnitude() >= mMinimumMagnitude) {
+                // check for duplicates
+                if (!mEarthquake.contains(earthquake)) {
+                    mEarthquake.add(earthquake);
+                    mEarthquakeAdapter.notifyItemInserted(earthquakes.indexOf(earthquake));
+                }
             }
+
         }
+
+        if (mEarthquake != null && mEarthquake.size() > 0)
+            for (int i = mEarthquake.size() - 1; i >= 0; i--) {
+                if (mEarthquake.get(i).getMagnitude() < mMinimumMagnitude) {
+                    mEarthquake.remove(i);
+                    mEarthquakeAdapter.notifyItemRemoved(i);
+                }
+            }
         mSwipeToRefreshView.setRefreshing(false);
+    }
+
+    // this method in this class reads the Shared Preference minimum magnitude value
+    private void updateFromPreferences() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        mMinimumMagnitude = Integer.parseInt(prefs.getString(PreferencesActivity.PREF_MIN_MAG, "3"));
     }
 }
