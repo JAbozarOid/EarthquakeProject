@@ -1,12 +1,16 @@
 package com.aratel.earthquake;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.aratel.earthquake.viewmodel.EarthquakeViewModel;
@@ -20,6 +24,9 @@ import java.util.List;
 public class EarthquakeMainActivity extends AppCompatActivity implements EarthquakeListFragment.OnListFragmentInteractionListener{
 
     private static final String TAG_LIST_FRAGMENT = "TAG_LIST_FRAGMENT";
+
+    private static final int MENU_PREFERENCES = Menu.FIRST+1;
+    private static final int SHOW_PREFERENCES = 1;
 
     private EarthquakeViewModel earthquakeViewModel;
 
@@ -84,6 +91,29 @@ public class EarthquakeMainActivity extends AppCompatActivity implements Earthqu
     @Override
     public void onListFragmentRefreshRequested() {
         updateEarthquakes();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+
+        menu.add(0,MENU_PREFERENCES,Menu.NONE,R.string.menu_settings);
+
+        return true;
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        switch (item.getItemId()) {
+            case MENU_PREFERENCES:
+                Intent intent = new Intent(this,PreferencesActivity.class);
+                startActivityForResult(intent,SHOW_PREFERENCES);
+                return true;
+        }
+        return false;
     }
 
     private void updateEarthquakes() {
